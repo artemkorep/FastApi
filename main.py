@@ -1,30 +1,44 @@
+import wikipedia
 from fastapi import FastAPI
 from pydantic import BaseModel
-import pyjokes
+
 app = FastAPI()
-@app.get('/')
-def joke():
-    return pyjokes.get_joke()
 
-@app.get('/{friend}')
-def friends_joke(friend: str):
-    return friend + ' tells his joke:' + pyjokes.get_joke()
 
-@app.get('multi/{friend}')
-def multi_friends_joke(friend:str, jokes_number: int):
-    result = ''
-    for i in range(jokes_number):
-        result += friend + f' tells his joke #{i+1}: ' + pyjokes.get_joke()
-    return result
+class ArticleInput(BaseModel):
+    name: str
+    sent_num: int
 
-class Joke(BaseModel):
-    friend: str
-    joke: str
 
-class JokeInput(BaseModel):
-    friend: str
+class Article(BaseModel):
+    name: str
+    content: str
 
-@app.post('/', response_model=Joke)
-def create_joke(joke_input: JokeInput):
-    """Создание шутки"""
-    return Joke(friend=joke_input.friend, joke=pyjokes.get_joke())
+
+class Articles(BaseModel):
+    names: list[str]
+
+
+@app.get('/{path}', response_model=Articles)
+def get_name(path: str):
+    try:
+        return Articles(names=wikipedia.search(path)[:10])
+    except:
+        return Articles(names=[])
+
+
+@app.get('/article/{name}', response_model=Article)
+def get_article(name: str, sentence_cnt: int):
+    try:
+        return Article(name=name, content=wikipedia.summary(name, sentences=sentence_cnt))
+    except:
+        return Article(name=name, content="Не найдено")
+
+
+@app.post("/", response_model=Article)
+def create_article(article_input: ArticleInput):
+    try:
+        return Article(name=article_input.name,
+                       content=wikipedia.summary(article_input.name, sentences=article_input.sent_num))
+    except:
+        return Article(name=article_input.name, content="Не найдено")
