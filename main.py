@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import FastAPI
 import wikipedia
 from pydantic import BaseModel
@@ -43,28 +41,3 @@ class Description(BaseModel):
 def get_page(name_page: Pagesname):
     """Название статей с передачей параметров в теле"""
     return Description(title=wikipedia.search(name_page.input, results=name_page.cnt))
-
-# class Inputbody(BaseModel):
-#     stroka: str
-#
-# class BodyPage(BaseModel):
-#     title: str
-#     original_title: str
-#     pageid: int
-#     url: int
-#
-#
-# @app.post('/pagetest', response_model=BodyPage)
-# def page_test(test: Inputbody):
-#     return BodyPage(title=wikipedia.page(test.stroka))
-
-
-# {
-#   "title": "WJXT",
-#   "original_title": "WJXT",
-#   "pageid": "1453424",
-#   "url": "https://en.wikipedia.org/wiki/WJXT"
-# }
-# @app.post('/page/{name_page}')
-# def get_page(name_page: str):
-#     return wikipedia.page(name_page)
