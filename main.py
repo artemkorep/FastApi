@@ -1,44 +1,70 @@
-import wikipedia
+from typing import Optional
+
 from fastapi import FastAPI
+import wikipedia
 from pydantic import BaseModel
 
-app = FastAPI()
-
-
-class ArticleInput(BaseModel):
-    name: str
-    sent_num: int
-
-
-class Article(BaseModel):
-    name: str
-    content: str
+app = FastAPI(
+    title = 'Wikipedia'
+)
 
 
 class Articles(BaseModel):
-    names: list[str]
+    article: list[str]
 
 
-@app.get('/{path}', response_model=Articles)
-def get_name(path: str):
-    try:
-        return Articles(names=wikipedia.search(path)[:10])
-    except:
-        return Articles(names=[])
+@app.get('/article/{article}', response_model=Articles) # list of article titles
+def get_article(article: str, cnt_articles: int):
+    """Название статей"""
+    return Articles(article=wikipedia.search(article, results=cnt_articles))
 
 
-@app.get('/article/{name}', response_model=Article)
-def get_article(name: str, sentence_cnt: int):
-    try:
-        return Article(name=name, content=wikipedia.summary(name, sentences=sentence_cnt))
-    except:
-        return Article(name=name, content="Не найдено")
+class Sentences(BaseModel):
+    title: str
 
 
-@app.post("/", response_model=Article)
-def create_article(article_input: ArticleInput):
-    try:
-        return Article(name=article_input.name,
-                       content=wikipedia.summary(article_input.name, sentences=article_input.sent_num))
-    except:
-        return Article(name=article_input.name, content="Не найдено")
+@app.get('/sentence',response_model=Sentences) # returns the correct text
+def get_sentence(sentence: str):
+    """Возвращает правильный текст"""
+    return Sentences(title=wikipedia.suggest(sentence))
+
+
+class Pagesname(BaseModel):
+    input: str
+    cnt: int
+
+
+
+class Description(BaseModel):
+    title: list[str]
+
+
+@app.post('/page', response_model=Description)
+def get_page(name_page: Pagesname):
+    """Название статей с передачей параметров в теле"""
+    return Description(title=wikipedia.search(name_page.input, results=name_page.cnt))
+
+# class Inputbody(BaseModel):
+#     stroka: str
+#
+# class BodyPage(BaseModel):
+#     title: str
+#     original_title: str
+#     pageid: int
+#     url: int
+#
+#
+# @app.post('/pagetest', response_model=BodyPage)
+# def page_test(test: Inputbody):
+#     return BodyPage(title=wikipedia.page(test.stroka))
+
+
+# {
+#   "title": "WJXT",
+#   "original_title": "WJXT",
+#   "pageid": "1453424",
+#   "url": "https://en.wikipedia.org/wiki/WJXT"
+# }
+# @app.post('/page/{name_page}')
+# def get_page(name_page: str):
+#     return wikipedia.page(name_page)
